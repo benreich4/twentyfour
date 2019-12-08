@@ -8,6 +8,9 @@ case object DividedBy extends Operator { override def exec(a: Rational, b: Ratio
 case object Operator { val all = Seq(Plus, Times, Minus, DividedBy) }
 
 case class Expression(nums: Seq[Rational], operators: Seq[Operator], operatorOrder: Seq[Int]) {
+	require(nums.length - 1 == operators.length, "Number of operators must be one fewer than number of numbers")
+	require(operators.length == operatorOrder.length, "Operator ordering length is not same as number of operators")
+
 	case class SolvePart(value: Rational, operator: Option[Operator], operatorOrder: Option[Int])
 
 	@scala.annotation.tailrec
