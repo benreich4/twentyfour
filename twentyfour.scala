@@ -1,13 +1,14 @@
 package twentyfour
 
-case class Board(a: Int, b: Int, c: Int, d: Int) {
+case class Board(nums: Int*) {
 	def solve = {
-		val numCombos = Seq(Rational(a), Rational(b), Rational(c), Rational(d)).permutations.toList
-		val operatorCombos = (for { i <- Operator.all; j <- Operator.all; k <- Operator.all } yield Seq(i, j, k)).toList
-		val operatorOrders = (1 to 3).permutations.toList
+		val numCombos = nums.map(Fraction(_)).permutations.toList
+		val allOperators = Seq.fill(nums.length - 1)(Operator.all).flatten
+		val operatorCombos = allOperators.combinations(nums.length - 1).flatMap(_.permutations.toList).toList
+		val operatorOrders = (1 until nums.length).permutations.toList
 
 		val tries = for { 
-			nums <- numCombos.toList
+			nums <- numCombos
 			operators <- operatorCombos
 			operatorOrder <- operatorOrders
 		} yield Expression(nums, operators, operatorOrder) 
@@ -17,10 +18,7 @@ case class Board(a: Int, b: Int, c: Int, d: Int) {
 }
 
 case object Board {
-	private val allBoards = {
-		val nums = (1 to 13)
-		for { i <- nums; j <- nums; k <- nums; l <- nums } yield Board(i, j, k, l)
-	}
+	private def allBoards(n: Int) = Seq.fill(n)(1 to 13).flatten.combinations(4).map(nums => Board(nums:_*))
 
-	def noSolutions = allBoards.filter(_.solve.isEmpty)
+	def noSolutions(n: Int) = allBoards(n).filter(_.solve.isEmpty)
 }

@@ -14,7 +14,7 @@ case class Expression(nums: Seq[Rational], operators: Seq[Operator], operatorOrd
 	case class SolvePart(value: Rational, operator: Option[Operator], operatorOrder: Option[Int])
 
 	@scala.annotation.tailrec
-	private def solve(partials: Seq[SolvePart], rep: Int): Rational = {
+	private def solve(partials: List[SolvePart], rep: Int): Rational = {
 		if (partials.length == 1) partials.head.value else {
 			val (before, after) = partials.span(_.operatorOrder.get != rep)
 			val hd :: next :: tl = after
@@ -27,13 +27,13 @@ case class Expression(nums: Seq[Rational], operators: Seq[Operator], operatorOrd
 
 	def value = {
 		val initialPartials = nums.zip(operators.map(Some(_)):+None).zip(operatorOrder.map(Some(_)):+None).map { case ((a, b), c) => SolvePart(a, b, c) }
-		solve(initialPartials, 1)
+		solve(initialPartials.toList, 1)
 	}
 
 	case class StringifyPart(value: String, operator: Option[Operator], operatorOrder: Option[Int])
 
 	@scala.annotation.tailrec
-	private def stringify(partials: Seq[StringifyPart], rep: Int): String = {
+	private def stringify(partials: List[StringifyPart], rep: Int): String = {
 		if (partials.length == 1) partials.head.value else {
 			val (before, after) = partials.span(_.operatorOrder.get != rep)
 			val hd :: next :: tl = after
@@ -46,6 +46,6 @@ case class Expression(nums: Seq[Rational], operators: Seq[Operator], operatorOrd
 
 	override def toString = {
 		val initialPartials = nums.zip(operators.map(Some(_)):+None).zip(operatorOrder.map(Some(_)):+None).map { case ((a, b), c) => StringifyPart(a.toString, b, c) }
-		stringify(initialPartials, 1)
+		stringify(initialPartials.toList, 1)
 	}
 }
