@@ -1,15 +1,35 @@
-case class Rational(num: Int, den: Int = 1) {
-	override def toString = if(den == 1) num.toString else s"$num/$den"
-	def +(that: Rational) = Rational(this.num * that.den + that.num * this.den, this.den * that.den)
-	def *(that: Rational) = Rational(this.num * that.num, this.den * that.den)
-	def -(that: Rational) = this + that.neg
-	def /(that: Rational) = this * that.recip
+sealed trait Rational {
+	def +(that: Rational): Rational = (this, that) match {
+		case (NaN, _) => NaN
+		case (_, NaN) => NaN
+		case (a: Fraction, b: Fraction) => Fraction(a.num * b.den + b.num * a.den, a.den * b.den)
+	}
+	def -(that: Rational): Rational = (this, that) match {
+		case (NaN, _) => NaN
+		case (_, NaN) => NaN
+		case (a: Fraction, b: Fraction) => Fraction(a.num * b.den - b.num * a.den, a.den * b.den)
+	}
+	def *(that: Rational): Rational = (this, that) match {
+		case (NaN, _) => NaN
+		case (_, NaN) => NaN
+		case (a: Fraction, b: Fraction) => Fraction(a.num * b.num, a.den * b.den)
+	}
+	def /(that: Rational): Rational = (this, that) match {
+		case (NaN, _) => NaN
+		case (_, NaN) => NaN
+		case (a: Fraction, b: Fraction)=> if(b.num == 0) NaN else Fraction(a.num * b.den, a.den * b.num)
+	}
+}
 
-	def neg = Rational(-1 * num, den)
-	def recip = Rational(den, num)
+object Rational { def apply(num: Int) = Fraction(num) }
+
+case object NaN extends Rational { override def toString = "NaN" }
+
+case class Fraction(num: Int, den: Int = 1) extends Rational {
+	override def toString = if(den == 1) num.toString else s"$num/$den"
 
 	override def equals(that: Any) = that match {
-		case that: Rational => this.num * that.den == that.num * this.den 
+		case that: Fraction => this.num * that.den == that.num * this.den 
 		case _ => false
 	}
 }
@@ -19,9 +39,7 @@ case object Plus extends Operator { override def exec(a: Rational, b: Rational) 
 case object Times extends Operator { override def exec(a: Rational, b: Rational) = a * b; override def toString = "*" }
 case object Minus extends Operator { override def exec(a: Rational, b: Rational) = a - b; override def toString = "-" }
 case object DividedBy extends Operator { override def exec(a: Rational, b: Rational) = a / b; override def toString = "/" }
-case object Operator {
-	val all = Seq(Plus, Times, Minus, DividedBy)
-}
+case object Operator { val all = Seq(Plus, Times, Minus, DividedBy) }
 
 case class Board(a: Int, b: Int, c: Int, d: Int) {
 	def solve = {
@@ -31,8 +49,8 @@ case class Board(a: Int, b: Int, c: Int, d: Int) {
 
 		val tries = for { 
 			nums <- numCombos.toList
-			operators <- operatorCombos.toList
-			operatorOrder <- operatorOrders.toList
+			operators <- operatorCombos
+			operatorOrder <- operatorOrders
 		} yield Expression(nums, operators, operatorOrder) 
 
 		tries.filter(_.value == Rational(24))
@@ -40,15 +58,12 @@ case class Board(a: Int, b: Int, c: Int, d: Int) {
 }
 
 case object Board {
-	def noSolutions = {
+	private val allBoards = {
 		val nums = (1 to 13)
-		val allBoards = for { i <- nums; j <- nums; k <- nums; l <- nums } yield Board(i, j, k, l)
-
-		allBoards.zipWithIndex.map { case (b, i) => 
-			if (i % 1000 == 0) println(i)
-			b
-		}.filter(_.solve.isEmpty)
+		for { i <- nums; j <- nums; k <- nums; l <- nums } yield Board(i, j, k, l)
 	}
+
+	def noSolutions = allBoards.filter(_.solve.isEmpty)
 }
 
 case class Expression(nums: Seq[Rational], operators: Seq[Operator], operatorOrder: Seq[Int]) {
