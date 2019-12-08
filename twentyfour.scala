@@ -1,6 +1,6 @@
 package twentyfour
 
-case class Board(nums: Int*) {
+case class Board(solution: Int)(nums: Int*) {
 	def solutions = {
 		val numCombos = nums.map(Fraction(_)).permutations.toList
 		val allOperators = Seq.fill(nums.length - 1)(Operator.all).flatten
@@ -13,14 +13,24 @@ case class Board(nums: Int*) {
 			operatorOrder <- operatorOrders
 		} yield Expression(nums, operators, operatorOrder) 
 
-		tries.iterator.filter(_.value == Rational(24))
+		tries.iterator.filter(_.value == Rational(solution))
 	}
 
 	def solvable = solutions.nonEmpty
 }
 
 case object Board {
-	private def allBoards(n: Int) = Seq.fill(n)(1 to 13).flatten.combinations(n).map(nums => Board(nums:_*))
+	private def allBoards(solution: Int, n: Int) = Seq.fill(n)(1 to 13).flatten.combinations(n).map(nums => Board(solution)(nums:_*))
 
-	def noSolutions(n: Int) = allBoards(n).filterNot(_.solvable)
+	def noSolutions(solution: Int, n: Int) = allBoards(solution, n).filterNot(_.solvable)
+}
+
+
+object SolutionRate {
+	def calc = {
+		(1 to 50).foreach { solution =>
+			val len = Board.noSolutions(solution, 4).length
+			println(s"Number of unsolvable boards for $solution: $len")
+		}
+	}
 }
